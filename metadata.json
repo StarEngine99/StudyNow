@@ -1,0 +1,6 @@
+{
+  "name": "StudyNow",
+  "description": "Student Habit Tracker, Academic Timetable, Exam Planner, Pomodoro Timer and Scheduled Study Reminders",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

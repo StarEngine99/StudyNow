@@ -1,0 +1,135 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global safety net: deny all by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidStudentProfile(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80 &&
+             (!('email' in data) || (data.email is string && data.email.size() <= 120)) &&
+             (!('schoolName' in data) || (data.schoolName is string && data.schoolName.size() <= 120)) &&
+             (!('className' in data) || (data.className is string && data.className.size() <= 80)) &&
+             (!('studentCode' in data) || (data.studentCode is string && data.studentCode.size() <= 30)) &&
+             (!('avatarPreset' in data) || (data.avatarPreset is string && data.avatarPreset.size() <= 30)) &&
+             (!('photoUrl' in data) || (data.photoUrl is string && data.photoUrl.size() <= 500)) &&
+             (!('pomodoroMinutesTotal' in data) || (data.pomodoroMinutesTotal is int && data.pomodoroMinutesTotal >= 0 && data.pomodoroMinutesTotal <= 1000000)) &&
+             (!('pomodoroSessionsCount' in data) || (data.pomodoroSessionsCount is int && data.pomodoroSessionsCount >= 0 && data.pomodoroSessionsCount <= 100000));
+    }
+
+    function isValidHabit(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 100 &&
+             data.category is string && data.category in ['STUDY', 'HEALTH', 'LANGUAGE', 'MINDSET'] &&
+             data.targetMinutes is int && data.targetMinutes >= 1 && data.targetMinutes <= 600 &&
+             data.completedDates is list && data.completedDates.size() <= 366 &&
+             (data.completedDates.size() == 0 || data.completedDates[0] is string) &&
+             data.currentStreak is int && data.currentStreak >= 0 && data.currentStreak <= 3660 &&
+             data.bestStreak is int && data.bestStreak >= 0 && data.bestStreak <= 3660 &&
+             data.reminderHour is int && data.reminderHour >= 0 && data.reminderHour <= 23 &&
+             data.reminderMinute is int && data.reminderMinute >= 0 && data.reminderMinute <= 59 &&
+             data.reminderEnabled is bool;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if isOwner(userId);
+
+      allow create: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       incoming().keys().hasAll(['userId', 'displayName', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'displayName', 'email', 'schoolName', 'className',
+                         'studentCode', 'avatarPreset', 'photoUrl',
+                         'pomodoroMinutesTotal', 'pomodoroSessionsCount',
+                         'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().createdAt is timestamp &&
+                       incoming().createdAt <= request.time &&
+                       incoming().updatedAt is timestamp &&
+                       incoming().updatedAt <= request.time &&
+                       isValidStudentProfile(incoming());
+
+      allow update: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().updatedAt is timestamp &&
+                       incoming().updatedAt <= request.time &&
+                       isValidStudentProfile(incoming()) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'displayName', 'email', 'schoolName', 'className',
+                         'studentCode', 'avatarPreset', 'photoUrl',
+                         'pomodoroMinutesTotal', 'pomodoroSessionsCount',
+                         'updatedAt'
+                       ]);
+
+      allow delete: if isOwner(userId) && isValidId(userId);
+
+      match /habits/{habitId} {
+        allow get: if isOwner(userId) && isValidId(habitId);
+        allow list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+                         isValidId(habitId) &&
+                         incoming().keys().hasAll([
+                           'userId', 'title', 'category', 'targetMinutes',
+                           'completedDates', 'currentStreak', 'bestStreak',
+                           'reminderHour', 'reminderMinute', 'reminderEnabled',
+                           'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'title', 'category', 'targetMinutes',
+                           'completedDates', 'currentStreak', 'bestStreak',
+                           'reminderHour', 'reminderMinute', 'reminderEnabled',
+                           'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().createdAt is timestamp &&
+                         incoming().createdAt <= request.time &&
+                         incoming().updatedAt is timestamp &&
+                         incoming().updatedAt <= request.time &&
+                         isValidHabit(incoming());
+
+        allow update: if isOwner(userId) &&
+                         isValidId(habitId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().updatedAt is timestamp &&
+                         incoming().updatedAt <= request.time &&
+                         isValidHabit(incoming()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'title', 'category', 'targetMinutes',
+                           'completedDates', 'currentStreak', 'bestStreak',
+                           'reminderHour', 'reminderMinute', 'reminderEnabled',
+                           'updatedAt'
+                         ]);
+
+        allow delete: if isOwner(userId) && isValidId(habitId);
+      }
+    }
+  }
+}

@@ -1,0 +1,153 @@
+{
+  "entities": {
+    "StudentProfile": {
+      "title": "StudentProfile",
+      "description": "Authenticated student profile and study statistics synced to Firestore.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the student."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Student full name."
+        },
+        "email": {
+          "type": "string",
+          "description": "Student email address."
+        },
+        "schoolName": {
+          "type": "string",
+          "description": "University or school name."
+        },
+        "className": {
+          "type": "string",
+          "description": "Class or academic major."
+        },
+        "studentCode": {
+          "type": "string",
+          "description": "Student ID number (MSSV)."
+        },
+        "avatarPreset": {
+          "type": "string",
+          "description": "Selected academic badge avatar preset."
+        },
+        "photoUrl": {
+          "type": "string",
+          "description": "Optional photo URL from Google Sign-In."
+        },
+        "pomodoroMinutesTotal": {
+          "type": "integer",
+          "description": "Total completed Pomodoro focus minutes."
+        },
+        "pomodoroSessionsCount": {
+          "type": "integer",
+          "description": "Total completed Pomodoro focus sessions."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of profile creation (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "displayName",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Habit": {
+      "title": "Habit",
+      "description": "Daily student habit with real-time streak tracking and reminder schedule.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the habit owner."
+        },
+        "title": {
+          "type": "string",
+          "description": "Habit title (e.g., Reading, Exercise, English)."
+        },
+        "category": {
+          "type": "string",
+          "enum": ["STUDY", "HEALTH", "LANGUAGE", "MINDSET"],
+          "description": "Habit category."
+        },
+        "targetMinutes": {
+          "type": "integer",
+          "description": "Daily target duration in minutes."
+        },
+        "completedDates": {
+          "type": "array",
+          "description": "List of completed ISO dates (yyyy-MM-dd)."
+        },
+        "currentStreak": {
+          "type": "integer",
+          "description": "Current consecutive completion days."
+        },
+        "bestStreak": {
+          "type": "integer",
+          "description": "Longest consecutive completion streak achieved."
+        },
+        "reminderHour": {
+          "type": "integer",
+          "description": "Daily reminder hour (0-23)."
+        },
+        "reminderMinute": {
+          "type": "integer",
+          "description": "Daily reminder minute (0-59)."
+        },
+        "reminderEnabled": {
+          "type": "boolean",
+          "description": "Whether daily notification reminder is enabled."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of habit creation (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last habit update (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "title",
+        "category",
+        "targetMinutes",
+        "completedDates",
+        "currentStreak",
+        "bestStreak",
+        "reminderHour",
+        "reminderMinute",
+        "reminderEnabled",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/StudentProfile"
+      },
+      "description": "Per-user student profile document."
+    },
+    "/users/{userId}/habits/{habitId}": {
+      "schema": {
+        "$ref": "#/entities/Habit"
+      },
+      "description": "Per-user real-time daily habit tracker subcollection."
+    }
+  }
+}

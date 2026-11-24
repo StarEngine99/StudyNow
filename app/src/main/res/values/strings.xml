@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">StudyNow</string>
+    <string name="app_tagline">Quản lý thói quen &amp; lịch học thông minh</string>
+    <string name="nav_dashboard">Tổng quan</string>
+    <string name="nav_academic">Lịch học</string>
+    <string name="nav_habits">Thói quen</string>
+    <string name="nav_pomodoro">Pomodoro</string>
+    <string name="sign_in_google">Đăng nhập với Google</string>
+    <string name="sign_out">Đăng xuất</string>
+    <string name="notification_channel_classes">Nhắc lịch học</string>
+    <string name="notification_channel_exams">Nhắc lịch thi</string>
+    <string name="notification_channel_habits">Nhắc thói quen hằng ngày</string>
+    <string name="notification_channel_pomodoro">Báo hết giờ Pomodoro</string>
+</resources>
